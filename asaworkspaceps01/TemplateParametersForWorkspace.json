@@ -1,0 +1,48 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"value": "asaworkspaceps01"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"value": ""
+		},
+		"asadatalakeps01_accountKey": {
+			"value": ""
+		},
+		"asastoreps01_connectionString": {
+			"value": ""
+		},
+		"asaworkspaceps01-WorkspaceDefaultSqlServer_connectionString": {
+			"value": ""
+		},
+		"sqlpool01_connectionString": {
+			"value": ""
+		},
+		"sqlpool01_highperf_connectionString": {
+			"value": ""
+		},
+		"sqlpool01_import01_connectionString": {
+			"value": ""
+		},
+		"sqlpool01_workload01_connectionString": {
+			"value": ""
+		},
+		"sqlpool01_workload02_connectionString": {
+			"value": ""
+		},
+		"CosmosDb1_connectionString": {
+			"value": ""
+		},
+		"asadatalakeps01_properties_typeProperties_url": {
+			"value": "https://asadatalakeps01.dfs.core.windows.net"
+		},
+		"asakeyvaultps01_properties_typeProperties_baseUrl": {
+			"value": "https://asakeyvaultps01.vault.azure.net/"
+		},
+		"asaworkspaceps01-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"value": "https://asadatalakeps01.dfs.core.windows.net"
+		}
+	}
+}

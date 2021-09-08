@@ -1,0 +1,1948 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "asaworkspaceps01"
+		},
+		"AzureBlobStorage1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
+		},
+		"asadatalakeps01_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'asadatalakeps01'"
+		},
+		"asastoreps01_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'asastoreps01'"
+		},
+		"asaworkspaceps01-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'asaworkspaceps01-WorkspaceDefaultSqlServer'"
+		},
+		"sqlpool01_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqlpool01'"
+		},
+		"sqlpool01_highperf_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqlpool01_highperf'"
+		},
+		"sqlpool01_import01_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqlpool01_import01'"
+		},
+		"sqlpool01_workload01_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqlpool01_workload01'"
+		},
+		"sqlpool01_workload02_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqlpool01_workload02'"
+		},
+		"CosmosDb1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'CosmosDb1'"
+		},
+		"asadatalakeps01_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asadatalakeps01.dfs.core.windows.net"
+		},
+		"asakeyvaultps01_properties_typeProperties_baseUrl": {
+			"type": "string",
+			"defaultValue": "https://asakeyvaultps01.vault.azure.net/"
+		},
+		"asaworkspaceps01-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://asadatalakeps01.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/Lab 08 - Execute Business Analyst Queries')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Analyst",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(1,10)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Workload 2 for Data Analyst",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlDWSource",
+											"sqlReaderQuery": "select count(X.A) from (\nselect CAST(CustomerId as nvarchar(20)) as A from wwi.SaleSmall) X where A like '%3%'",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "wwi02_sale_small_workload_02_asa",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/wwi02_sale_small_workload_02_asa')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Lab 08 - Execute Data Analyst and CEO Queries')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "CEO",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(1,20)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Workload 1 for CEO",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlDWSource",
+											"sqlReaderQuery": "select count(X.A) from (\nselect CAST(CustomerId as nvarchar(20)) as A from wwi.SaleSmall) X where A like '%3%'",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "wwi02_sale_small_workload_01_asa",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Analyst",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@range(1,20)",
+								"type": "Expression"
+							},
+							"activities": [
+								{
+									"name": "Workload 2 for Data Analyst",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "SqlDWSource",
+											"sqlReaderQuery": "select count(X.A) from (\nselect CAST(CustomerId as nvarchar(20)) as A from wwi.SaleSmall) X where A like '%3%'",
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "wwi02_sale_small_workload_02_asa",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/wwi02_sale_small_workload_01_asa')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_sale_small_workload_02_asa')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Setup - Copy  PoC Customer Data')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Customer",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								}
+							},
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "asastoreps01",
+									"type": "LinkedServiceReference"
+								},
+								"path": "staging"
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"name": "CustomerId",
+											"type": "String"
+										},
+										"sink": {
+											"name": "CustomerId",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"name": "FirstName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "FirstName",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "MiddleInitial",
+											"type": "String"
+										},
+										"sink": {
+											"name": "MiddleInitial",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "LastName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "LastName",
+											"type": "String"
+										}
+									},
+									{
+										"source": {
+											"name": "FullName",
+											"type": "String"
+										},
+										"sink": {
+											"name": "FullName",
+											"type": "String"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "wwi02_poc_customer_adls",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "wwi02_poc_customer_asa",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/wwi02_poc_customer_adls')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_poc_customer_asa')]",
+				"[concat(variables('workspaceId'), '/linkedServices/asastoreps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Setup - Import User Profile Data into Cosmos DB')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"description": "Copy user profile data from Azure Storage to Azure Cosmos DB.",
+				"activities": [
+					{
+						"name": "Copy Customer Profile Data to Cosmos DB",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "JsonSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"wildcardFolderPath": "online-user-profiles-01",
+									"wildcardFileName": "*.json",
+									"enablePartitionDiscovery": false
+								}
+							},
+							"sink": {
+								"type": "CosmosDbSqlApiSink",
+								"writeBehavior": "insert"
+							},
+							"enableStaging": false,
+							"parallelCopies": 100,
+							"enableSkipIncompatibleRow": true,
+							"dataIntegrationUnits": 16
+						},
+						"inputs": [
+							{
+								"referenceName": "wwi02_online_user_profiles_01_adal",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "customer_profile_cosmosdb",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/wwi02_online_user_profiles_01_adal')]",
+				"[concat(variables('workspaceId'), '/datasets/customer_profile_cosmosdb')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Setup - Load SQL Pool')]",
+			"type": "Microsoft.Synapse/workspaces/pipelines",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"activities": [
+					{
+						"name": "Process years",
+						"type": "ForEach",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@pipeline().parameters.Years",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Copy Sale Small Year",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "7.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "ParquetSource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true,
+												"wildcardFolderPath": {
+													"value": "@concat('sale-small/Year=',item(), '/*')",
+													"type": "Expression"
+												},
+												"wildcardFileName": "*.parquet",
+												"enablePartitionDiscovery": false
+											}
+										},
+										"sink": {
+											"type": "SqlDWSink",
+											"allowPolyBase": true,
+											"polyBaseSettings": {
+												"rejectValue": 0,
+												"rejectType": "value",
+												"useTypeDefault": true
+											},
+											"disableMetricsCollection": false
+										},
+										"enableStaging": true,
+										"stagingSettings": {
+											"linkedServiceName": {
+												"referenceName": "asastoreps01",
+												"type": "LinkedServiceReference"
+											},
+											"path": "staging"
+										},
+										"translator": {
+											"type": "TabularTranslator",
+											"mappings": [
+												{
+													"source": {
+														"name": "TransactionId",
+														"type": "String"
+													},
+													"sink": {
+														"name": "TransactionId",
+														"type": "Guid"
+													}
+												},
+												{
+													"source": {
+														"name": "CustomerId",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "CustomerId",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "ProductId",
+														"type": "Int16"
+													},
+													"sink": {
+														"name": "ProductId",
+														"type": "Int16"
+													}
+												},
+												{
+													"source": {
+														"name": "Quantity",
+														"type": "SByte"
+													},
+													"sink": {
+														"name": "Quantity",
+														"type": "Byte"
+													}
+												},
+												{
+													"source": {
+														"name": "Price",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "Price",
+														"type": "Decimal"
+													}
+												},
+												{
+													"source": {
+														"name": "TotalAmount",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "TotalAmount",
+														"type": "Decimal"
+													}
+												},
+												{
+													"source": {
+														"name": "TransactionDate",
+														"type": "Int32"
+													},
+													"sink": {
+														"name": "TransactionDateId",
+														"type": "Int32"
+													}
+												},
+												{
+													"source": {
+														"name": "ProfitAmount",
+														"type": "Decimal"
+													},
+													"sink": {
+														"name": "ProfitAmount",
+														"type": "Decimal"
+													}
+												},
+												{
+													"source": {
+														"name": "Hour",
+														"type": "SByte"
+													},
+													"sink": {
+														"name": "Hour",
+														"type": "Byte"
+													}
+												},
+												{
+													"source": {
+														"name": "Minute",
+														"type": "SByte"
+													},
+													"sink": {
+														"name": "Minute",
+														"type": "Byte"
+													}
+												},
+												{
+													"source": {
+														"name": "StoreId",
+														"type": "Int16"
+													},
+													"sink": {
+														"name": "StoreId",
+														"type": "Int16"
+													}
+												}
+											]
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "wwi02_sale_small_adls",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "wwi02_sale_small_asa",
+											"type": "DatasetReference",
+											"parameters": {}
+										}
+									]
+								}
+							]
+						}
+					},
+					{
+						"name": "Copy Product",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"preCopyScript": "truncate table wwi.Product",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								},
+								"disableMetricsCollection": false
+							},
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "asastoreps01",
+									"type": "LinkedServiceReference"
+								},
+								"path": "staging"
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 1
+										},
+										"sink": {
+											"name": "ProductId",
+											"type": "Int16"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 2
+										},
+										"sink": {
+											"name": "Seasonality",
+											"type": "Byte"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 3
+										},
+										"sink": {
+											"name": "Price",
+											"type": "Decimal"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 4
+										},
+										"sink": {
+											"name": "Profit",
+											"type": "Decimal"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "wwi02_product_adls",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "wwi02_product_asa",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Copy Date",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "SqlDWSink",
+								"preCopyScript": "truncate table wwi.Date",
+								"allowPolyBase": true,
+								"polyBaseSettings": {
+									"rejectValue": 0,
+									"rejectType": "value",
+									"useTypeDefault": true
+								},
+								"disableMetricsCollection": false
+							},
+							"enableStaging": true,
+							"stagingSettings": {
+								"linkedServiceName": {
+									"referenceName": "asastoreps01",
+									"type": "LinkedServiceReference"
+								},
+								"path": "staging"
+							},
+							"translator": {
+								"type": "TabularTranslator",
+								"mappings": [
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 1
+										},
+										"sink": {
+											"name": "DateId",
+											"type": "Int32"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 2
+										},
+										"sink": {
+											"name": "Day",
+											"type": "Byte"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 3
+										},
+										"sink": {
+											"name": "Month",
+											"type": "Byte"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 4
+										},
+										"sink": {
+											"name": "Quarter",
+											"type": "Byte"
+										}
+									},
+									{
+										"source": {
+											"type": "String",
+											"ordinal": 5
+										},
+										"sink": {
+											"name": "Year",
+											"type": "Int16"
+										}
+									}
+								]
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "wwi02_date_adls",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "wwi02_date_asa",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"Years": {
+						"type": "array",
+						"defaultValue": [
+							2019
+						]
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/datasets/wwi02_product_adls')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_product_asa')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_date_adls')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_date_asa')]",
+				"[concat(variables('workspaceId'), '/linkedServices/asastoreps01')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_sale_small_adls')]",
+				"[concat(variables('workspaceId'), '/datasets/wwi02_sale_small_asa')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/DelimitedText1')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureBlobStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobStorageLocation"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/AzureBlobStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/customer_profile_cosmosdb')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "CosmosDb1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "CosmosDbSqlApiCollection",
+				"schema": {
+					"type": "object",
+					"properties": {
+						"userId": {
+							"type": "integer"
+						},
+						"cartId": {
+							"type": "string"
+						},
+						"preferredProducts": {
+							"type": "array"
+						},
+						"productReviews": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"productId": {
+										"type": "integer"
+									},
+									"reviewText": {
+										"type": "string"
+									},
+									"reviewDate": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				},
+				"typeProperties": {
+					"collectionName": "OnlineUserProfile01"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/CosmosDb1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_date_adls')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asadatalakeps01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "generator-date.csv",
+						"folderPath": "data-generators",
+						"fileSystem": "wwi-02"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asadatalakeps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_date_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "DateId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "Day",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Month",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Quarter",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Year",
+						"type": "smallint",
+						"precision": 5
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi",
+					"table": "Date"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_online_user_profiles_01_adal')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asadatalakeps01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "*.json",
+						"folderPath": "online-user-profiles-01",
+						"fileSystem": "wwi-02"
+					}
+				},
+				"schema": {
+					"type": "object",
+					"properties": {
+						"userId": {
+							"type": "integer"
+						},
+						"cartId": {
+							"type": "string"
+						},
+						"preferredProducts": {
+							"type": "array",
+							"items": {
+								"type": "integer"
+							}
+						},
+						"productReviews": {
+							"type": "array",
+							"items": {
+								"type": "object",
+								"properties": {
+									"productId": {
+										"type": "integer"
+									},
+									"reviewText": {
+										"type": "string"
+									},
+									"reviewDate": {
+										"type": "string"
+									}
+								}
+							}
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asadatalakeps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_poc_customer_adls')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asadatalakeps01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "generator-customer.csv",
+						"folderPath": "data-generators",
+						"fileSystem": "wwi-02"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "'"
+				},
+				"schema": [
+					{
+						"name": "CustomerId",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "MiddleInitial",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "FullName",
+						"type": "String"
+					},
+					{
+						"name": "Gender",
+						"type": "String"
+					},
+					{
+						"name": "Age",
+						"type": "String"
+					},
+					{
+						"name": "BirthDate",
+						"type": "String"
+					},
+					{
+						"name": "Address",
+						"type": "String"
+					},
+					{
+						"name": "Mobile",
+						"type": "String"
+					},
+					{
+						"name": "Email",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asadatalakeps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_poc_customer_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "CustomerId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "FirstName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "MiddleInitial",
+						"type": "nvarchar"
+					},
+					{
+						"name": "LastName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "FullName",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Gender",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Age",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "BirthDate",
+						"type": "date"
+					},
+					{
+						"name": "Address_PostalCode",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Address_Street",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Address_City",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Address_Country",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Mobile",
+						"type": "nvarchar"
+					},
+					{
+						"name": "Email",
+						"type": "nvarchar"
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi_poc",
+					"table": "Customer"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_product_adls')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asadatalakeps01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "generator-product.csv",
+						"folderPath": "data-generators/generator-product",
+						"fileSystem": "wwi-02"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					},
+					{
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asadatalakeps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_product_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "ProductId",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Seasonality",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Price",
+						"type": "decimal",
+						"precision": 6,
+						"scale": 2
+					},
+					{
+						"name": "Profit",
+						"type": "decimal",
+						"precision": 6,
+						"scale": 2
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi",
+					"table": "Product"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_sale_small_adls')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "asadatalakeps01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Parquet",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "sale-small",
+						"fileSystem": "wwi-02"
+					},
+					"compressionCodec": "snappy"
+				},
+				"schema": [
+					{
+						"name": "TransactionId",
+						"type": "UTF8"
+					},
+					{
+						"name": "CustomerId",
+						"type": "INT32"
+					},
+					{
+						"name": "ProductId",
+						"type": "INT_16"
+					},
+					{
+						"name": "Quantity",
+						"type": "INT_8"
+					},
+					{
+						"name": "Price",
+						"type": "DECIMAL",
+						"precision": 38,
+						"scale": 18
+					},
+					{
+						"name": "TotalAmount",
+						"type": "DECIMAL",
+						"precision": 38,
+						"scale": 18
+					},
+					{
+						"name": "TransactionDate",
+						"type": "INT32"
+					},
+					{
+						"name": "ProfitAmount",
+						"type": "DECIMAL",
+						"precision": 38,
+						"scale": 18
+					},
+					{
+						"name": "Hour",
+						"type": "INT_8"
+					},
+					{
+						"name": "Minute",
+						"type": "INT_8"
+					},
+					{
+						"name": "StoreId",
+						"type": "INT_16"
+					},
+					{
+						"name": "Year",
+						"type": "UTF8"
+					},
+					{
+						"name": "Quarter",
+						"type": "UTF8"
+					},
+					{
+						"name": "Month",
+						"type": "UTF8"
+					},
+					{
+						"name": "Day",
+						"type": "UTF8"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asadatalakeps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_sale_small_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "TransactionId",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "CustomerId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductId",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Quantity",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Price",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TotalAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TransactionDateId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProfitAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "Hour",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Minute",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "StoreId",
+						"type": "smallint",
+						"precision": 5
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi",
+					"table": "SaleSmall"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_sale_small_workload_01_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "TransactionId",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "CustomerId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductId",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Quantity",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Price",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TotalAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TransactionDateId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProfitAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "Hour",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Minute",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "StoreId",
+						"type": "smallint",
+						"precision": 5
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi",
+					"table": "SaleSmall"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/wwi02_sale_small_workload_02_asa')]",
+			"type": "Microsoft.Synapse/workspaces/datasets",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "sqlpool01",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlDWTable",
+				"schema": [
+					{
+						"name": "TransactionId",
+						"type": "uniqueidentifier"
+					},
+					{
+						"name": "CustomerId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProductId",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Quantity",
+						"type": "smallint",
+						"precision": 5
+					},
+					{
+						"name": "Price",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TotalAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "TransactionDateId",
+						"type": "int",
+						"precision": 10
+					},
+					{
+						"name": "ProfitAmount",
+						"type": "decimal",
+						"precision": 9,
+						"scale": 2
+					},
+					{
+						"name": "Hour",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "Minute",
+						"type": "tinyint",
+						"precision": 3
+					},
+					{
+						"name": "StoreId",
+						"type": "smallint",
+						"precision": 5
+					}
+				],
+				"typeProperties": {
+					"schema": "wwi",
+					"table": "SaleSmall"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/sqlpool01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureBlobStorage1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('AzureBlobStorage1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asadatalakeps01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('asadatalakeps01_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('asadatalakeps01_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asakeyvaultps01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureKeyVault",
+				"typeProperties": {
+					"baseUrl": "[parameters('asakeyvaultps01_properties_typeProperties_baseUrl')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asastoreps01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('asastoreps01_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asaworkspaceps01-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('asaworkspaceps01-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/asaworkspaceps01-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('asaworkspaceps01-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sqlpool01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('sqlpool01_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "asakeyvaultps01",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "SQL-USER-ASA"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asakeyvaultps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sqlpool01_highperf')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('sqlpool01_highperf_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "asakeyvaultps01",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "SQL-USER-ASA"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asakeyvaultps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sqlpool01_import01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('sqlpool01_import01_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "asakeyvaultps01",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "SQL-USER-ASA"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asakeyvaultps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sqlpool01_workload01')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('sqlpool01_workload01_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "asakeyvaultps01",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "SQL-USER-ASA"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asakeyvaultps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/sqlpool01_workload02')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('sqlpool01_workload02_connectionString')]",
+					"password": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "asakeyvaultps01",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "SQL-USER-ASA"
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/linkedServices/asakeyvaultps01')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AzureIntegrationRuntime01')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "MemoryOptimized",
+							"coreCount": 16,
+							"timeToLive": 60
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQLPool01')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"collation": "SQL_Latin1_General_CP1_CI_AS",
+				"maxSizeBytes": 263882790666240,
+				"restorePointInTime": "0001-01-01T00:00:00",
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "westus"
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/CosmosDb1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('CosmosDb1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		}
+	]
+}
