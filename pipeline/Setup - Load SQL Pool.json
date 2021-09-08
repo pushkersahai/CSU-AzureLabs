@@ -225,6 +225,13 @@
 						"disableMetricsCollection": false
 					},
 					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "asastoreps01",
+							"type": "LinkedServiceReference"
+						},
+						"path": "staging"
+					},
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
@@ -319,6 +326,13 @@
 						"disableMetricsCollection": false
 					},
 					"enableStaging": true,
+					"stagingSettings": {
+						"linkedServiceName": {
+							"referenceName": "asastoreps01",
+							"type": "LinkedServiceReference"
+						},
+						"path": "staging"
+					},
 					"translator": {
 						"type": "TabularTranslator",
 						"mappings": [
