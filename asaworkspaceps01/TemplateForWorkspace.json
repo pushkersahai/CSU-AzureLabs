@@ -11,6 +11,10 @@
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'AzureBlobStorage1'"
 		},
+		"CosmosDb1_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'CosmosDb1'"
+		},
 		"asadatalakeps01_accountKey": {
 			"type": "secureString",
 			"metadata": "Secure string for 'accountKey' of 'asadatalakeps01'"
@@ -42,10 +46,6 @@
 		"sqlpool01_workload02_connectionString": {
 			"type": "secureString",
 			"metadata": "Secure string for 'connectionString' of 'sqlpool01_workload02'"
-		},
-		"CosmosDb1_connectionString": {
-			"type": "secureString",
-			"metadata": "Secure string for 'connectionString' of 'CosmosDb1'"
 		},
 		"asadatalakeps01_properties_typeProperties_url": {
 			"type": "string",
@@ -1664,6 +1664,25 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/CosmosDb1')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "CosmosDb",
+				"typeProperties": {
+					"connectionString": "[parameters('CosmosDb1_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/asadatalakeps01')]",
 			"type": "Microsoft.Synapse/workspaces/linkedServices",
 			"apiVersion": "2019-06-01-preview",
@@ -1913,6 +1932,126 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 1')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "IF NOT EXISTS (SELECT * FROM sys.external_file_formats WHERE name = 'SynapseParquetFormat') \n\tCREATE EXTERNAL FILE FORMAT [SynapseParquetFormat] \n\tWITH ( FORMAT_TYPE = PARQUET)\nGO\n\nIF NOT EXISTS (SELECT * FROM sys.external_data_sources WHERE name = 'wwi-02_asadatalakeps01_dfs_core_windows_net') \n\tCREATE EXTERNAL DATA SOURCE [wwi-02_asadatalakeps01_dfs_core_windows_net] \n\tWITH (\n\t\tLOCATION = 'abfss://wwi-02@asadatalakeps01.dfs.core.windows.net', \n\t\tTYPE = HADOOP \n\t)\nGO\n\nCREATE EXTERNAL TABLE external_parquet (\n\t[TransactionId] varchar(8000),\n\t[CustomerId] int,\n\t[ProductId] smallint,\n\t[Quantity] smallint,\n\t[Price] numeric(38,18),\n\t[TotalAmount] numeric(38,18),\n\t[TransactionDate] int,\n\t[ProfitAmount] numeric(38,18),\n\t[Hour] smallint,\n\t[Minute] smallint,\n\t[StoreId] smallint\n\t)\n\tWITH (\n\tLOCATION = 'campaign-analytics/sale-20161230-snappy.parquet',\n\tDATA_SOURCE = [wwi-02_asadatalakeps01_dfs_core_windows_net],\n\tFILE_FORMAT = [SynapseParquetFormat]\n\t)\nGO\n\nSELECT TOP 100 * FROM external_parquet\nGO\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SQLPool01",
+						"poolName": "SQLPool01"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 2')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "-- This is auto-generated code\nSELECT TOP 100\n    jsonContent\n/* --> place the keys that you see in JSON documents in the WITH clause:\n       , JSON_VALUE (jsonContent, '$.key1') AS header1\n       , JSON_VALUE (jsonContent, '$.key2') AS header2\n*/\nFROM\n    OPENROWSET(\n        BULK 'https://asadatalakeps01.dfs.core.windows.net/wwi-02/sampleJSON.json',\n        FORMAT = 'CSV',\n        FIELDQUOTE = '0x0b',\n        FIELDTERMINATOR ='0x0b',\n        ROWTERMINATOR = '0x0b'\n    )\n    WITH (\n        jsonContent varchar(MAX)\n    ) AS [result]\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 3')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'SHARED ACCESS SIGNATURE',\nSECRET ='sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-09-30T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https,http&sig=haQEoZXzzlV6GcELYiweDpveWXIzT8X611T9fS%2BJwGo%3D'\n-----------------\nDROP EXTERNAL TABLE json_archive\nDROP EXTERNAL DATA SOURCE pocDataSource\nDROP DATABASE SCOPED CREDENTIAL pocCredential\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE=HADOOP,\nLOCATION='abfss://staging@asadatalakeps01.dfs.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n-----------SAS\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nLOCATION='https://asadatalakeps01.blob.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n\nCREATE EXTERNAL FILE FORMAT jsonFormat WITH\n(\n    FORMAT_TYPE=DELIMITEDTEXT\n)\n \nCREATE EXTERNAL TABLE json_archive (json varchar(max))\nWITH\n(\n    DATA_SOURCE= pocDataSource,\n    FILE_FORMAT=jsonFormat,\n    LOCATION='/staging'\n    ,REJECT_TYPE = VALUE\n    ,REJECT_VALUE = 100\n    ,REJECTED_ROW_LOCATION='/Reject_Directory'\n)\n \nSELECT * FROM json_archive\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SQLPool01",
+						"poolName": "SQLPool01"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 4')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "?sv=2020-08-04&ss=bfqt&srt=c&sp=rwdlacupx&se=2021-09-23T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https&sig=tSbEdyxOUsdzCV67pPK%2Fqw%2FrT2ZmKGlAytpRmQSPQIg%3D\n\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'SHARED ACCESS SIGNATURE',\nSECRET ='sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-09-30T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https,http&sig=haQEoZXzzlV6GcELYiweDpveWXIzT8X611T9fS%2BJwGo%3D'\n-----------------\nDROP EXTERNAL TABLE json_archive\nDROP EXTERNAL DATA SOURCE pocDataSource\nDROP DATABASE SCOPED CREDENTIAL pocCredential\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE=HADOOP,\nLOCATION='abfss://staging@asadatalakeps01.dfs.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n-----------SAS\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nLOCATION='https://asadatalakeps01.blob.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n\n-------------------------------------------------------------------------Working------------------\n\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE=HADOOP,\nLOCATION='abfss://staging@asadatalakeps01.dfs.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n\nCREATE EXTERNAL FILE FORMAT jsonFormat WITH\n(\n    FORMAT_TYPE=DELIMITEDTEXT\n)\n \nCREATE EXTERNAL TABLE json_archive (json varchar(max))\nWITH\n(\n    DATA_SOURCE= pocDataSource,\n    FILE_FORMAT=jsonFormat,\n    LOCATION='/'\n    ,REJECT_TYPE = VALUE\n    ,REJECT_VALUE = 100\n    ,REJECTED_ROW_LOCATION='/Reject_Directory'\n)\n \nSELECT * FROM json_archive\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "master",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 5')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'SHARED ACCESS SIGNATURE',\nSECRET ='sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-09-30T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https,http&sig=haQEoZXzzlV6GcELYiweDpveWXIzT8X611T9fS%2BJwGo%3D'\n\n\n\n-----------------\nDROP EXTERNAL TABLE json_archive\nDROP EXTERNAL DATA SOURCE pocDataSource\nDROP DATABASE SCOPED CREDENTIAL pocCredential\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE=HADOOP,\nLOCATION='abfss://staging@asadatalakeps01.dfs.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n-----------SAS\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nLOCATION='https://asadatalakeps01.blob.core.windows.net/',\nCREDENTIAL=pocCredential\n)\n\n\nCREATE EXTERNAL FILE FORMAT jsonFormat WITH\n(\n    FORMAT_TYPE=DELIMITEDTEXT\n)\n \nCREATE EXTERNAL TABLE json_archive (json varchar(max))\nWITH\n(\n    DATA_SOURCE= pocDataSource,\n    FILE_FORMAT=jsonFormat,\n    LOCATION='/staging'\n    ,REJECT_TYPE = VALUE\n    ,REJECT_VALUE = 100\n    ,REJECTED_ROW_LOCATION='/Reject_Directory'\n)\n \nSELECT * FROM json_archive\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "dwhtest",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/SQL script 6')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'SHARED ACCESS SIGNATURE',\nSECRET ='sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-09-30T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https,http&sig=haQEoZXzzlV6GcELYiweDpveWXIzT8X611T9fS%2BJwGo%3D'\n\n\n\n-----------------\nDROP EXTERNAL TABLE json_archive\nDROP EXTERNAL DATA SOURCE pocDataSource\nDROP DATABASE SCOPED CREDENTIAL pocCredential\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE = HADOOP,\nLOCATION='wasbs://staging@asadatalakeps01.blob.core.windows.net',\nCREDENTIAL=pocCredential\n)\n\n\n\nCREATE EXTERNAL FILE FORMAT jsonFormat WITH\n(\n    FORMAT_TYPE=DELIMITEDTEXT\n)\n \nCREATE EXTERNAL TABLE json_archive (json varchar(max))\nWITH\n(\n    DATA_SOURCE= pocDataSource,\n    FILE_FORMAT=jsonFormat,\n    LOCATION='sampleJSON.json'\n    ,REJECT_TYPE = VALUE\n    ,REJECT_VALUE = 100\n    ,REJECTED_ROW_LOCATION='/Reject_Directory'\n)\n \nSELECT * FROM json_archive\n\n\n\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "SQLPool01",
+						"poolName": "SQLPool01"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/SQLPool01')]",
 			"type": "Microsoft.Synapse/workspaces/sqlPools",
 			"apiVersion": "2019-06-01-preview",
@@ -1924,25 +2063,6 @@
 			},
 			"dependsOn": [],
 			"location": "westus"
-		},
-		{
-			"name": "[concat(parameters('workspaceName'), '/CosmosDb1')]",
-			"type": "Microsoft.Synapse/workspaces/linkedServices",
-			"apiVersion": "2019-06-01-preview",
-			"properties": {
-				"annotations": [],
-				"type": "CosmosDb",
-				"typeProperties": {
-					"connectionString": "[parameters('CosmosDb1_connectionString')]"
-				},
-				"connectVia": {
-					"referenceName": "AutoResolveIntegrationRuntime",
-					"type": "IntegrationRuntimeReference"
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
-			]
 		}
 	]
 }
