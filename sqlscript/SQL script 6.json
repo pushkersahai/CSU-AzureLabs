@@ -1,0 +1,17 @@
+{
+	"name": "SQL script 6",
+	"properties": {
+		"content": {
+			"query": "CREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'SHARED ACCESS SIGNATURE',\nSECRET ='sv=2020-08-04&ss=bfqt&srt=sco&sp=rwdlacupx&se=2021-09-30T03:13:17Z&st=2021-09-15T19:13:17Z&spr=https,http&sig=haQEoZXzzlV6GcELYiweDpveWXIzT8X611T9fS%2BJwGo%3D'\n\n\n\n-----------------\nDROP EXTERNAL TABLE json_archive\nDROP EXTERNAL DATA SOURCE pocDataSource\nDROP DATABASE SCOPED CREDENTIAL pocCredential\n\nCREATE DATABASE SCOPED CREDENTIAL pocCredential\nWITH IDENTITY= 'AzureADLS',\nSECRET ='bL6ZlWrdVOxzA8XfS2o958VoDenHu0gGj4+4zjF+LaJ0X1NigPspvtBmuhwkBvh3ME35jzlfWzph9ylOP58Cmg=='\n\n\nCREATE EXTERNAL DATA SOURCE pocDataSource WITH\n(\nTYPE = HADOOP,\nLOCATION='wasbs://staging@asadatalakeps01.blob.core.windows.net',\nCREDENTIAL=pocCredential\n)\n\n\n\nCREATE EXTERNAL FILE FORMAT jsonFormat WITH\n(\n    FORMAT_TYPE=DELIMITEDTEXT\n)\n \nCREATE EXTERNAL TABLE json_archive (json varchar(max))\nWITH\n(\n    DATA_SOURCE= pocDataSource,\n    FILE_FORMAT=jsonFormat,\n    LOCATION='sampleJSON.json'\n    ,REJECT_TYPE = VALUE\n    ,REJECT_VALUE = 100\n    ,REJECTED_ROW_LOCATION='/Reject_Directory'\n)\n \nSELECT * FROM json_archive\n\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "SQLPool01",
+				"poolName": "SQLPool01"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
